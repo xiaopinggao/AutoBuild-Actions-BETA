@@ -132,8 +132,8 @@ EOF
 			Copy ${CustomFiles}/${TARGET_PROFILE}_system ${BASE_FILES}/etc/config system
 		;;
 		xiaomi_redmi-router-ax6s)
-			AddPackage passwall-depends xiaorouji openwrt-passwall-packages main
-			AddPackage passwall-luci xiaorouji openwrt-passwall main
+			AddPackage passwall-depends Openwrt-Passwall openwrt-passwall-packages main
+			AddPackage passwall-luci Openwrt-Passwall openwrt-passwall main
 		;;
 		esac
 	;;
@@ -143,34 +143,27 @@ EOF
 			sed -i -- 's:/bin/ash:'/bin/bash':g' ${BASE_FILES}/etc/passwd
 			case "${CONFIG_FILE}" in
 			x86_64)
-				# sed -i "s?/bin/login?/usr/libexec/login.sh?g" ${FEEDS_PKG}/ttyd/files/ttyd.config
 				AddPackage qosmate hudra0 qosmate main
 				AddPackage qosmate hudra0 luci-app-qosmate main
-				AddPackage passwall xiaorouji openwrt-passwall main
-			    AddPackage passwall xiaorouji openwrt-passwall-packages main
+				
+				AddPackage bandix timsaya luci-app-bandix main
+				AddPackage bandix timsaya openwrt-bandix main
+
 				AddPackage fakehttp yingziwu luci-app-fakehttp main
 				AddPackage fakehttp yingziwu openwrt-fakehttp main
-				# AddPackage passwall xiaorouji openwrt-passwall2 main
+				
+				AddPackage passwall Openwrt-Passwall openwrt-passwall main
+			    AddPackage passwall Openwrt-Passwall openwrt-passwall-packages main
+				sed -i 's/^local excluded_domain = {.*/local excluded_domain = {}/' package/passwall/openwrt-passwall/luci-app-passwall/root/usr/share/passwall/rule_update.lua
+				
+				rm -rf feeds/packages/lang/golang
+				git clone https://github.com/sbwml/packages_lang_golang -b 25.x feeds/packages/lang/golang
+				
 				rm -r ${FEEDS_LUCI}/luci-app-passwall
-				#AddPackage other WROIATE luci-app-socat main
-    			#rm -r ${FEEDS_LUCI}/luci-app-socat
-				#AddPackage other sbwml luci-app-mosdns v5
-				#mosdns_version="5.3.3"
-				#wget --quiet --no-check-certificate -P /tmp \
-				#	https://github.com/IrineSistiana/mosdns/releases/download/v${mosdns_version}/mosdns-linux-amd64.zip
-				#unzip /tmp/mosdns-linux-amd64.zip -d /tmp
-				#Copy /tmp/mosdns ${BASE_FILES}/usr/bin
-				#chmod +x ${BASE_FILES}/usr/bin
-				#sed -i "s?+mosdns ??g" ${WORK}/package/other/luci-app-mosdns/luci-app-mosdns/Makefile
-				#sed -i "s?+v2ray-geoip ??g" ${WORK}/package/other/luci-app-mosdns/luci-app-mosdns/Makefile
-				#sed -i "s?+v2ray-geosite ??g" ${WORK}/package/other/luci-app-mosdns/luci-app-mosdns/Makefile
-				#rm -r ${WORK}/package/other/luci-app-mosdns/mosdns
-				#Copy ${CustomFiles}/socat.Makefile ${FEEDS_PKG}/socat Makefile
-				#rm -r ${FEEDS_PKG}/socat/files
+				rm -rf ${FEEDS_PKG}/{xray-core,v2ray-geodata,sing-box,chinadns-ng,dns2socks,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan-plus,tuic-client,v2ray-plugin,xray-plugin,geoview,shadow-tls}
+
 				Copy ${CustomFiles}/speedtest ${BASE_FILES}/usr/bin
 				chmod +x ${BASE_FILES}/usr/bin/speedtest
-				
-				# sed -i '/PKG_FIXUP/d' ${WORK}/feeds/packages/libs/libffi/Makefile
 			;;
 			esac
 		;;
@@ -186,16 +179,26 @@ EOF
 	hanwckf/immortalwrt-mt798x*)
 		case "${TARGET_PROFILE}" in
 		cmcc_rax3000m | jcg_q30)
-			AddPackage passwall xiaorouji openwrt-passwall main
-			AddPackage passwall xiaorouji openwrt-passwall-packages main
+			AddPackage fakehttp yingziwu luci-app-fakehttp main
+			AddPackage fakehttp yingziwu openwrt-fakehttp main
+				
+			rm -r ${FEEDS_LUCI}/luci-app-passwall
+			rm -rf ${FEEDS_PKG}/{xray-core,v2ray-geodata,sing-box,chinadns-ng,dns2socks,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan-plus,tuic-client,v2ray-plugin,xray-plugin,geoview,shadow-tls}
+
+			AddPackage passwall Openwrt-Passwall openwrt-passwall main
+			AddPackage passwall Openwrt-Passwall openwrt-passwall-packages main
+			sed -i 's/^local excluded_domain = {.*/local excluded_domain = {}/' package/passwall/openwrt-passwall/luci-app-passwall/root/usr/share/passwall/rule_update.lua
+				
 			patch < ${CustomFiles}/mt7981/0001-Add-iptables-socket.patch -p1 -d ${WORK}
-			rm -rf ${WORK}/feeds/luci/applications/luci-app-passwall
-			rm -rf ${WORK}/feeds/packages/net/{xray-core,v2ray-geodata,sing-box,chinadns-ng,dns2socks,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan-plus,tuic-client,v2ray-plugin,xray-plugin,geoview,shadow-tls}
+
 			rm -rf ${WORK}/package/network/services/dnsmasq
 			Copy ${CustomFiles}/dnsmasq ${WORK}/package/network/services
 
 			find ${WORK}/package/ | grep Makefile | grep mosdns | xargs rm -f
 			
+			rm -rf feeds/packages/lang/golang
+			git clone https://github.com/sbwml/packages_lang_golang -b 25.x feeds/packages/lang/golang
+				
 			AddPackage other sbwml luci-app-mosdns v5
 		;;
 		esac
@@ -206,7 +209,7 @@ EOF
 		Copy ${CustomFiles}/Depends/cpuset ${BASE_FILES}/bin
 		ReleaseDL https://api.github.com/repos/nxtrace/NTrace-core/releases/latest nexttrace_linux_amd64 ${BASE_FILES}/bin nexttrace
 
-		hysteria_version="2.6.1"
+		hysteria_version="2.7.0"
 		wstunnel_version="9.2.3"
 		wget --quiet --no-check-certificate -P /tmp \
 			https://github.com/apernet/hysteria/releases/download/app%2Fv${hysteria_version}/hysteria-linux-amd64
